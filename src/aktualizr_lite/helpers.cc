@@ -77,7 +77,10 @@ bool LiteClient::dockerAppsChanged() {
 #define add_apps_header(headers, config) \
   {}
 
-bool should_compare_docker_apps(const Config &config){return false};
+bool should_compare_docker_apps(const Config &config) {
+  (void)config;
+  return false;
+}
 
 void LiteClient::storeDockerParamsDigest() {}
 bool LiteClient::dockerAppsChanged() { return false; }
