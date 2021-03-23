@@ -2,12 +2,14 @@
 #define BOOTLOADER_H_
 
 #include "libaktualizr/config.h"
+#include "rollbacks/rollback.h"
 
 class INvStorage;
 
 class Bootloader {
  public:
   Bootloader(BootloaderConfig config, INvStorage& storage);
+  virtual ~Bootloader() { delete (rollback_); }
   void setBootOK() const;
   void updateNotify() const;
 
@@ -28,6 +30,7 @@ class Bootloader {
   const BootloaderConfig config_;
 
   INvStorage& storage_;
+  Rollback* rollback_;
   boost::filesystem::path reboot_sentinel_;
   std::string reboot_command_;
   bool reboot_detect_supported_{false};

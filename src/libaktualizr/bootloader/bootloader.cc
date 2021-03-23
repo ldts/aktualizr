@@ -7,11 +7,12 @@
 
 #include <boost/filesystem.hpp>
 
+#include "rollbacks/factory.h"
 #include "storage/invstorage.h"
 #include "utilities/exceptions.h"
-#include "utilities/utils.h"
 
-Bootloader::Bootloader(BootloaderConfig config, INvStorage& storage) : config_(std::move(config)), storage_(storage) {
+Bootloader::Bootloader(BootloaderConfig config, INvStorage& storage)
+    : config_(std::move(config)), storage_(storage), rollback_(RollbackFactory::makeRollback(config_.rollback_mode)) {
   reboot_sentinel_ = config_.reboot_sentinel_dir / config_.reboot_sentinel_name;
   reboot_command_ = config_.reboot_command;
 
@@ -20,80 +21,12 @@ Bootloader::Bootloader(BootloaderConfig config, INvStorage& storage) : config_(s
     reboot_detect_supported_ = false;
     return;
   }
-
   reboot_detect_supported_ = true;
 }
 
-void Bootloader::setBootOK() const {
-  std::string sink;
-  switch (config_.rollback_mode) {
-    case RollbackMode::kBootloaderNone:
-      break;
-    case RollbackMode::kUbootGeneric:
-      if (Utils::shell("fw_setenv bootcount 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting bootcount";
-      }
-      break;
-    case RollbackMode::kUbootMasked:
-      if (Utils::shell("fw_setenv bootcount 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting bootcount";
-      }
-      if (Utils::shell("fw_setenv upgrade_available 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting upgrade_available for u-boot";
-      }
-      break;
-    case RollbackMode::kFioVB:
-      if (Utils::shell("fiovb_setenv bootcount 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting bootcount";
-      }
-      if (Utils::shell("fiovb_setenv upgrade_available 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting upgrade_available";
-      }
-      break;
-    default:
-      throw NotImplementedException();
-  }
-}
+void Bootloader::setBootOK() const { rollback_->setBootOK(); }
 
-void Bootloader::updateNotify() const {
-  std::string sink;
-  switch (config_.rollback_mode) {
-    case RollbackMode::kBootloaderNone:
-      break;
-    case RollbackMode::kUbootGeneric:
-      if (Utils::shell("fw_setenv bootcount 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting bootcount";
-      }
-      if (Utils::shell("fw_setenv rollback 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting rollback flag";
-      }
-      break;
-    case RollbackMode::kUbootMasked:
-      if (Utils::shell("fw_setenv bootcount 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting bootcount";
-      }
-      if (Utils::shell("fw_setenv upgrade_available 1", &sink) != 0) {
-        LOG_WARNING << "Failed setting upgrade_available for u-boot";
-      }
-      if (Utils::shell("fw_setenv rollback 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting rollback flag";
-      }
-      break;
-    case RollbackMode::kFioVB:
-      if (Utils::shell("fiovb_setenv bootcount 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting bootcount";
-      }
-      if (Utils::shell("fiovb_setenv upgrade_available 1", &sink) != 0) {
-        LOG_WARNING << "Failed setting upgrade_available";
-      }
-      if (Utils::shell("fiovb_setenv rollback 0", &sink) != 0) {
-        LOG_WARNING << "Failed resetting rollback flag";
-      }
-      break;
-    default:
-      throw NotImplementedException();
-  }
-}
+void Bootloader::updateNotify() const { rollback_->updateNotify(); }
 
 bool Bootloader::supportRebootDetection() const { return reboot_detect_supported_; }
 

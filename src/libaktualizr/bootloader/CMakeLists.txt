@@ -1,5 +1,12 @@
-set(HEADERS bootloader.h)
-set(SOURCES bootloader.cc)
+set(HEADERS bootloader.h
+	rollbacks/exception.h
+	rollbacks/factory.h
+	rollbacks/generic.h
+	rollbacks/masked.h
+	rollbacks/fiovb.h
+	rollbacks/rollback.h)
+
+set(SOURCES bootloader.cc rollbackfactory.cc)
 
 add_library(bootloader OBJECT ${SOURCES})
 target_include_directories(bootloader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
