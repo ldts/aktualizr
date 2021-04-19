@@ -1,4 +1,5 @@
 #include "bootloader.h"
+#include "bootloaderif.h"
 
 #include <fcntl.h>
 #include <sys/reboot.h>
@@ -134,11 +135,7 @@ void Bootloader::rebootFlagClear() {
   boost::filesystem::remove(reboot_sentinel_);
 }
 
-void Bootloader::reboot(bool fake_reboot) {
-  if (fake_reboot) {
-    boost::filesystem::remove(reboot_sentinel_);
-    return;
-  }
+void Bootloader::reboot() {
   if (setuid(0) != 0) {
     LOG_ERROR << "Failed to set/verify a root user so cannot reboot system programmatically";
     return;
@@ -148,3 +145,5 @@ void Bootloader::reboot(bool fake_reboot) {
     LOG_ERROR << "Failed to execute the reboot command: " << reboot_command_;
   }
 }
+
+void Bootloader::fakeReboot() { boost::filesystem::remove(reboot_sentinel_); }

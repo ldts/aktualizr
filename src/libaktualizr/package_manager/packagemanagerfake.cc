@@ -53,7 +53,7 @@ data::InstallationResult PackageManagerFake::install(const Uptane::Target& targe
 
 void PackageManagerFake::completeInstall() const {
   LOG_INFO << "Emulating a system reboot";
-  bootloader_->reboot(true);
+  bootloader_->fakeReboot();
 }
 
 data::InstallationResult PackageManagerFake::finalizeInstall(const Uptane::Target& target) {

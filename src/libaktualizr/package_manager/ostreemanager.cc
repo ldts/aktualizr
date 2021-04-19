@@ -16,6 +16,7 @@
 #include "libaktualizr/packagemanagerfactory.h"
 
 #include "bootloader/bootloader.h"
+#include "bootloader/bootloaderif.h"
 #include "logging/logging.h"
 #include "storage/invstorage.h"
 #include "utilities/utils.h"
@@ -240,6 +241,22 @@ data::InstallationResult OstreeManager::finalizeInstall(const Uptane::Target &ta
 }
 
 void OstreeManager::updateNotify() { bootloader_->updateNotify(); }
+
+OstreeManager::OstreeManager(const PackageConfig &pconfig, const BootloaderConfig &bconfig,
+                             const std::shared_ptr<INvStorage> &storage, const std::shared_ptr<HttpInterface> &http,
+                             std::unique_ptr<BootloaderIF> bootloader)
+    : PackageManagerInterface(pconfig, bconfig, storage, http), bootloader_(std::move(bootloader)) {
+  GObjectUniquePtr<OstreeSysroot> sysroot_smart = OstreeManager::LoadSysroot(config.sysroot);
+  if (sysroot_smart == nullptr) {
+    throw std::runtime_error("Could not find OSTree sysroot at: " + config.sysroot.string());
+  }
+
+  // consider boot successful as soon as we started, missing internet connection or connection to Secondaries are not
+  // proper reasons to roll back
+  if (imageUpdated()) {
+    bootloader_->setBootOK();
+  }
+}
 
 OstreeManager::OstreeManager(const PackageConfig &pconfig, const BootloaderConfig &bconfig,
                              const std::shared_ptr<INvStorage> &storage, const std::shared_ptr<HttpInterface> &http)

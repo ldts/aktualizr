@@ -9,6 +9,7 @@
 
 #include "libaktualizr/packagemanagerinterface.h"
 
+#include "bootloader/bootloaderif.h"
 #include "crypto/keymanager.h"
 #include "utilities/apiqueue.h"
 
@@ -42,6 +43,9 @@ class OstreeManager : public PackageManagerInterface {
  public:
   OstreeManager(const PackageConfig &pconfig, const BootloaderConfig &bconfig,
                 const std::shared_ptr<INvStorage> &storage, const std::shared_ptr<HttpInterface> &http);
+  OstreeManager(const PackageConfig &pconfig, const BootloaderConfig &bconfig,
+                const std::shared_ptr<INvStorage> &storage, const std::shared_ptr<HttpInterface> &http,
+                std::unique_ptr<BootloaderIF> bootloader);
   ~OstreeManager() override;
   std::string name() const override { return "ostree"; }
   Json::Value getInstalledPackages() const override;
@@ -69,7 +73,7 @@ class OstreeManager : public PackageManagerInterface {
   TargetStatus verifyTargetInternal(const Uptane::Target &target) const;
 
  private:
-  std::unique_ptr<Bootloader> bootloader_;
+  std::unique_ptr<BootloaderIF> bootloader_;
 };
 
 #endif  // OSTREE_H_

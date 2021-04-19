@@ -1,11 +1,12 @@
 #ifndef BOOTLOADER_H_
 #define BOOTLOADER_H_
 
+#include "bootloaderif.h"
 #include "libaktualizr/config.h"
 
 class INvStorage;
 
-class Bootloader {
+class Bootloader : public BootloaderIF {
  public:
   Bootloader(BootloaderConfig config, INvStorage& storage);
   void setBootOK() const;
@@ -22,7 +23,8 @@ class Bootloader {
   bool rebootDetected() const;
   void rebootFlagSet();
   void rebootFlagClear();
-  void reboot(bool fake_reboot = false);
+  void reboot();
+  void fakeReboot();
 
  private:
   const BootloaderConfig config_;
